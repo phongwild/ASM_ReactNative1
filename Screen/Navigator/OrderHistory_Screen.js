@@ -28,12 +28,13 @@ const OrderHistory_Screen = ({ navigation }) => {
     getData()
   }, []);
   const ItemHistory = ({ item }) => (
-    <TouchableOpacity style={{ marginBottom: 10, width: '100%', height: 70, borderRadius: 20, backgroundColor: '#262B33', padding: 10, flexDirection: 'column', alignItems: 'center' }}>
+    <TouchableOpacity style={{ marginBottom: 10, width: '100%', height: 100, borderRadius: 20, backgroundColor: '#262B33', padding: 10, flexDirection: 'column', alignItems: 'center', justifyContent:'center' }}>
       <Text style={{ color: '#AEAEAE', fontSize: 16, fontWeight: 'bold' }}>ID: {item.idHtr}</Text>
       <View style={{ flexDirection: 'row', marginTop: 5, justifyContent: 'space-evenly', width: '100%' }}>
         <Text style={{ color: '#AEAEAE', fontSize: 16, }}>Date: {item.dateOrder} </Text>
         <Text style={{ color: '#AEAEAE', fontSize: 16, }}>Time: {item.timeOrder} </Text>
       </View>
+      <Text style={{ color: '#d17842', fontSize: 18, fontWeight:'bold', marginTop:5 }}>Total: {item.total}$ </Text>
     </TouchableOpacity>
   )
   return (

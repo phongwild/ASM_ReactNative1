@@ -4,6 +4,7 @@ import { DATABASE } from '../../FirebaseConfig';
 import { get, ref, set } from "@firebase/database";
 import Loading from 'react-native-loading-spinner-overlay';
 import Entypo from 'react-native-vector-icons/Entypo';
+import LinearGradient from 'react-native-linear-gradient';
 
 
 const Home_Screen = ({ navigation }) => {
@@ -32,7 +33,15 @@ const Home_Screen = ({ navigation }) => {
     }
   };
   const search = (txt) => {
-
+    if (!txt) {
+      setdata(Object.values(Data));
+      return;
+    }else{
+      const filteredData = Data.filter((item) =>
+        item.namePd.toLowerCase().includes(txt.toLowerCase())
+      );
+      setdata(filteredData); 
+    }
   }
   useEffect(() => {
     console.log("useEffect triggered in Home_Screen");
@@ -42,43 +51,43 @@ const Home_Screen = ({ navigation }) => {
     };
   }, []);
   const Item_Product = ({ item }) => (
-    <View style={styles.st_item}>
-      <TouchableOpacity onPress={() => navigation.navigate('DetailProduct', { item })}>
-        <Image source={{ uri: item.image_pd }} style={{
-          width: '100%',
-          height: 130,
-          resizeMode: 'cover',
-          borderRadius: 10
-        }} />
-      </TouchableOpacity>
-      <Text style={{ color: '#fff', marginTop: 10, flexDirection: 'column' }} >
-        <Text style={{ fontSize: 14 }} >{item.namePd}</Text>
-      </Text>
-      <Text style={{ color: '#ffffff', fontSize: 10, marginTop: 5 }} >{item.description}</Text>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }} >
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }} >
-          <Text style={{ color: '#d17842' }}>$</Text>
-          <Text style={{ color: '#fff' }} >{item.price}</Text>
-        </Text>
-        <TouchableOpacity style={{ alignSelf: 'center', justifyContent: 'center', backgroundColor: '#d17842', padding: 5, borderRadius: 10, }}
-          onPress={() => {
-            const itemm = item.id;
-            const autoId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-            set(ref(DATABASE, 'Cart/' + `c${autoId.toString()}`), {
-              cardId: `c${autoId.toString()}`,
-              count: 1,
-              description: itemm.description,
-              image_pd: itemm.image_pd,
-              namePd: itemm.namePd,
-              pdt: itemm.pdt,
-              price: itemm.price
-            });
-            ToastAndroid.show('Thêm vào giỏ hàng thành công', ToastAndroid.SHORT);
-          }}>
-          <Entypo name='plus' size={24} color={'#fff'} />
+    <LinearGradient colors={['#252a32', '#262b33', "#000000"]} style={styles.st_item}>
+      
+        <TouchableOpacity onPress={() => navigation.navigate('DetailProduct', { item })}>
+          <Image source={{ uri: item.image_pd }} style={{
+            width: '100%',
+            height: 160,
+            resizeMode: 'cover',
+            borderRadius: 16
+          }} />
         </TouchableOpacity>
-      </View>
-    </View>
+        <Text style={{ color: '#fff', marginTop: 10, flexDirection: 'column' }} >
+          <Text style={{ fontSize: 15 }} >{item.namePd}</Text>
+        </Text>
+        <Text style={{ color: '#ffffff', fontSize: 11, marginTop: 5 }} >{item.description}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }} >
+          <Text style={{ fontSize: 19, fontWeight: 'bold' }} >
+            <Text style={{ color: '#d17842' }}>$</Text>
+            <Text style={{ color: '#fff' }} >{item.price}</Text>
+          </Text>
+          <TouchableOpacity style={{ alignSelf: 'center', justifyContent: 'center', backgroundColor: '#d17842', padding: 5, borderRadius: 10, }}
+            onPress={() => {
+              const autoId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+              set(ref(DATABASE, 'Cart/' + `c${autoId.toString()}`), {
+                cardId: `c${autoId.toString()}`,
+                count: 1,
+                description: item.description,
+                image_pd: item.image_pd,
+                namePd: item.namePd,
+                pdt: item.pdt,
+                price: item.price
+              });
+              ToastAndroid.show('Thêm vào giỏ hàng thành công', ToastAndroid.SHORT);
+            }}>
+            <Entypo name='plus' size={24} color={'#fff'} />
+          </TouchableOpacity>
+        </View>
+    </LinearGradient>
   );
   const Item_type = ({ item }) => {
     const isSelected = item.pdt === inActive;
@@ -117,7 +126,7 @@ const Home_Screen = ({ navigation }) => {
           padding: 15,
           borderRadius: 15,
 
-        }} placeholder='Find your coffee ...' placeholderTextColor='#52555a' onChangeText={(txt) => setinputSearch(txt)} />
+        }} placeholder='Find your coffee ...' placeholderTextColor='#52555a' onChangeText={(txt) => search(txt)} />
       </View>
       <FlatList
         data={type}
@@ -166,13 +175,13 @@ const styles = StyleSheet.create({
     padding: 5
   },
   st_item: {
-    borderRadius: 10,
+    borderRadius: 16,
     backgroundColor: '#22262e',
     width: 180,
     height: 250,
     flexDirection: 'column',
     padding: 10,
     marginRight: 10,
-    marginBottom: 10
+    marginBottom: 40
   }
 })

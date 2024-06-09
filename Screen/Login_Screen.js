@@ -18,6 +18,8 @@ const Login_Screen = ({ navigation }) => {
     const refd = ref(DATABASE, 'users');
     if (email.length == '' || pass.length == '') {
       setshowModal(true);
+    }else if(pass.length <= 7){
+      ToastAndroid.show('Mật khẩu không được ít hơn 8 kí tự', ToastAndroid.SHORT);
     } else {
       get(refd).then((snapshot) => {
         if (snapshot.exists()) {

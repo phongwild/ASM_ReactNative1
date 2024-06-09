@@ -28,8 +28,9 @@ const Cart_Screen = ({ route, navigation }) => {
         setCart(Object.values(cartData));
         let total = 0;
         for (const item in cartData) {
-          const tongTien =  Number(total = cartData[item].price)
-          Number(total += tongTien)
+          const priceWithCount = cartData[item].price * (cartData[item].count || 1);
+          total += priceWithCount;
+          console.log(`Item ${item} price with count: ${priceWithCount}`);
         }
         console.log(total);
         settotalPrice(total)
@@ -46,8 +47,9 @@ const Cart_Screen = ({ route, navigation }) => {
     try {
       const itemRef = ref(DATABASE, `Cart`);
       await remove(itemRef);
-      setCart((prevState) => prevState.filter((favItem) => favItem !== item));
+      setCart([]);
       getData();
+      settotalPrice(0);
     } catch (error) {
       console.error('Error deleting cart:', error);
     }
@@ -66,9 +68,9 @@ const Cart_Screen = ({ route, navigation }) => {
           historyData,
           timeOrder: time,
           dateOrder: date,
-          total: 100
+          total: totalPrice
         });
-        //delAllItemCart();
+        delAllItemCart();
         ToastAndroid.show('Đặt hàng thành công', ToastAndroid.SHORT);
       } else {
         ToastAndroid.show('Giỏ hàng của bạn đang trống', ToastAndroid.SHORT);
@@ -92,7 +94,7 @@ const Cart_Screen = ({ route, navigation }) => {
   }, []);
 
   const ItemCart = ({ item }) => {
-    const [Count, setCount] = useState(1);
+    const [Count, setCount] = useState(item.count || 1);
     const price = Count * item.price;
     return (
       <View style={{ marginTop: 20, backgroundColor: '#262B33', width: '100%', height: 154, borderRadius: 20, padding: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -124,6 +126,7 @@ const Cart_Screen = ({ route, navigation }) => {
             <TouchableOpacity style={{ backgroundColor: '#D17842', width: 30, height: 30, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }}
               onPress={() => {
                 setCount(Count - 1);
+                
                 if (Count < 1) {
                   handleDeleteItem(item);
                 }
@@ -133,7 +136,11 @@ const Cart_Screen = ({ route, navigation }) => {
             <View style={{ width: 55, height: 30, backgroundColor: '#0C0F14', borderRadius: 10, textAlign: 'center', borderWidth: 1, borderColor: '#D17842', justifyContent: 'center', alignItems: 'center' }}>
               <Text style={{ color: '#fff', fontSize: 16, fontWeight: '500' }}>{String(Count)}</Text>
             </View>
-            <TouchableOpacity style={{ backgroundColor: '#D17842', width: 30, height: 30, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }} onPress={() => setCount(Count + 1)} >
+            <TouchableOpacity style={{ backgroundColor: '#D17842', width: 30, height: 30, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }} 
+              onPress={() => {
+                setCount(Count + 1)
+                
+                }} >
               <IconEntypo name='plus' size={22} color={'#fff'} />
             </TouchableOpacity>
           </View>

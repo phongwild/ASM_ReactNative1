@@ -11,7 +11,6 @@ import Splash_Screen from './Screen/Splash_Screen';
 import { StatusBar } from 'react-native';
 
 
-
 export default function App() {
   const Stack = createStackNavigator();
   return (
