@@ -12,16 +12,21 @@ const Detail_Product = ({ route, navigation }) => {
     const item = route.params.item;
     const order = () => {
         const autoId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-        set(ref(DATABASE, 'Cart/' + `c${autoId.toString()}`), {
-            cardId: `c${autoId.toString()}`,
-            count: 1,
-            description: item.description,
-            image_pd: item.image_pd,
-            namePd: item.namePd,
-            pdt: item.pdt,
-            price: item.price
-        });
-        setshowModal(true)
+        if (borderSize == null) {
+            ToastAndroid.show('Bạn chưa chọn size', ToastAndroid.SHORT);
+        }else{
+            set(ref(DATABASE, 'Cart/' + `c${autoId.toString()}`), {
+                cardId: `c${autoId.toString()}`,
+                count: 1,
+                description: item.description,
+                image_pd: item.image_pd,
+                namePd: item.namePd,
+                pdt: item.pdt,
+                price: item.price,
+                size: borderSize
+            });
+            setshowModal(true)
+        }
     }
     const addToFavorite = () => {
         const autoId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;

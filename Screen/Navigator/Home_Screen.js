@@ -1,20 +1,28 @@
 import { FlatList, Image, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { DATABASE } from '../../FirebaseConfig';
 import { get, ref, set } from "@firebase/database";
 import Loading from 'react-native-loading-spinner-overlay';
 import Entypo from 'react-native-vector-icons/Entypo';
 import LinearGradient from 'react-native-linear-gradient';
+import { RefreshControl } from 'react-native-gesture-handler';
 
 
 const Home_Screen = ({ navigation }) => {
   const [Data, setdata] = useState([]);
   const [type, settype] = useState([]);
-  const [inputSearch, setinputSearch] = useState('');
+  const [refreshing, setrefreshing] = useState(false);
   const [inActive, setinActive] = useState(null);
   const p_type = ref(DATABASE, 'Product_type');
   const refd = ref(DATABASE, 'Product');
   const [isLoading, setIsLoading] = useState(true);
+  const onRefresh = useCallback(() => {
+    setrefreshing(true);
+    setTimeout(() => {
+      getDs();
+      setrefreshing(false);
+    }, 2000);
+  }, []);
   const getDs = async () => {
     try {
       const productSnapshot = await get(refd);
@@ -35,12 +43,11 @@ const Home_Screen = ({ navigation }) => {
   const search = (txt) => {
     if (!txt) {
       setdata(Object.values(Data));
-      return;
-    }else{
+    } else {
       const filteredData = Data.filter((item) =>
         item.namePd.toLowerCase().includes(txt.toLowerCase())
       );
-      setdata(filteredData); 
+      setdata(filteredData);
     }
   }
   useEffect(() => {
@@ -52,52 +59,60 @@ const Home_Screen = ({ navigation }) => {
   }, []);
   const Item_Product = ({ item }) => (
     <LinearGradient colors={['#252a32', '#262b33', "#000000"]} style={styles.st_item}>
-      
-        <TouchableOpacity onPress={() => navigation.navigate('DetailProduct', { item })}>
-          <Image source={{ uri: item.image_pd }} style={{
-            width: '100%',
-            height: 160,
-            resizeMode: 'cover',
-            borderRadius: 16
-          }} />
-        </TouchableOpacity>
-        <Text style={{ color: '#fff', marginTop: 10, flexDirection: 'column' }} >
-          <Text style={{ fontSize: 15 }} >{item.namePd}</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('DetailProduct', { item })}>
+        <Image source={{ uri: item.image_pd }} style={{
+          width: '100%',
+          height: 160,
+          resizeMode: 'cover',
+          borderRadius: 16
+        }} />
+      </TouchableOpacity>
+      <Text style={{ color: '#fff', marginTop: 10, flexDirection: 'column' }} >
+        <Text style={{ fontSize: 15 }} >{item.namePd}</Text>
+      </Text>
+      <Text style={{ color: '#ffffff', fontSize: 11, marginTop: 5 }} >{item.description}</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }} >
+        <Text style={{ fontSize: 19, fontWeight: 'bold' }} >
+          <Text style={{ color: '#d17842' }}>$</Text>
+          <Text style={{ color: '#fff' }} >{item.price}</Text>
         </Text>
-        <Text style={{ color: '#ffffff', fontSize: 11, marginTop: 5 }} >{item.description}</Text>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }} >
-          <Text style={{ fontSize: 19, fontWeight: 'bold' }} >
-            <Text style={{ color: '#d17842' }}>$</Text>
-            <Text style={{ color: '#fff' }} >{item.price}</Text>
-          </Text>
-          <TouchableOpacity style={{ alignSelf: 'center', justifyContent: 'center', backgroundColor: '#d17842', padding: 5, borderRadius: 10, }}
-            onPress={() => {
-              const autoId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-              set(ref(DATABASE, 'Cart/' + `c${autoId.toString()}`), {
-                cardId: `c${autoId.toString()}`,
-                count: 1,
-                description: item.description,
-                image_pd: item.image_pd,
-                namePd: item.namePd,
-                pdt: item.pdt,
-                price: item.price
-              });
-              ToastAndroid.show('Thêm vào giỏ hàng thành công', ToastAndroid.SHORT);
-            }}>
-            <Entypo name='plus' size={24} color={'#fff'} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={{ alignSelf: 'center', justifyContent: 'center', backgroundColor: '#d17842', padding: 5, borderRadius: 10, }}
+          onPress={() => {
+            const autoId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+            set(ref(DATABASE, 'Cart/' + `c${autoId.toString()}`), {
+              cardId: `c${autoId.toString()}`,
+              count: 1,
+              description: item.description,
+              image_pd: item.image_pd,
+              namePd: item.namePd,
+              pdt: item.pdt,
+              price: item.price,
+              size: 2
+            });
+            ToastAndroid.show('Thêm vào giỏ hàng thành công', ToastAndroid.SHORT);
+          }}>
+          <Entypo name='plus' size={24} color={'#fff'} />
+        </TouchableOpacity>
+      </View>
     </LinearGradient>
   );
   const Item_type = ({ item }) => {
     const isSelected = item.pdt === inActive;
     return (
-      <TouchableOpacity style={{ height: 40, marginBottom: 10, flexDirection: 'column' }}
+      <TouchableOpacity style={{ height: 40, marginBottom: 35, flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
         onPress={() => {
           setinActive(item.pdt);
+          if (!item.pdt) {
+            setdata(Object.values(Data));
+          } else {
+            const filteredData = Data.filter(() =>
+              item.pdt.toLowerCase().includes(item.pdt.toLowerCase())
+            );
+            setdata(filteredData);
+          }
         }}>
-        <Text style={{ color: isSelected ? '#D17842' : '#52555a', fontWeight: 'bold', fontSize: 16, padding: 10, borderBottomWidth: isSelected ? 3 : 0, borderColor: '#D17842', marginLeft: 10 }}>{item.pdt_name}</Text>
-        <View style={{ width: 10, height: 10, backgroundColor: isSelected ? '#D17842' : '#52555a' }}></View>
+        <Text style={{ color: isSelected ? '#D17842' : '#52555a', fontWeight: 'bold', fontSize: 16, paddingHorizontal: 10, paddingTop: 10, borderColor: '#D17842', marginLeft: 10 }}>{item.pdt_name}</Text>
+        <View style={{ backgroundColor: isSelected ? '#D17842' : '#52555a', width: 10, height: 10, borderRadius: 50, opacity: isSelected ? 1 : 0, marginTop: 5, marginLeft:10}}></View>
       </TouchableOpacity>
     )
   }
@@ -139,7 +154,14 @@ const Home_Screen = ({ navigation }) => {
         showsHorizontalScrollIndicator={false}
       />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />}
+      >
         {isLoading ? <Loading visible={true} /> : null}
         <FlatList
           data={Data}

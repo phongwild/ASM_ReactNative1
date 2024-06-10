@@ -2,7 +2,7 @@ import { FlatList, Image, RefreshControl, ScrollView, StyleSheet, Text, TextInpu
 import React, { useCallback, useEffect, useState } from 'react'
 import Loading from 'react-native-loading-spinner-overlay';
 import { DATABASE } from '../../FirebaseConfig';
-import { get, ref, set, remove } from "@firebase/database";
+import { get, ref, set, remove, update } from "@firebase/database";
 import moment from 'moment';
 import IconEntypo from 'react-native-vector-icons/Entypo'
 
@@ -30,7 +30,7 @@ const Cart_Screen = ({ route, navigation }) => {
         for (const item in cartData) {
           const priceWithCount = cartData[item].price * (cartData[item].count || 1);
           total += priceWithCount;
-          console.log(`Item ${item} price with count: ${priceWithCount}`);
+          //console.log(`Item ${item} price with count: ${priceWithCount}`);
         }
         console.log(total);
         settotalPrice(total)
@@ -96,6 +96,34 @@ const Cart_Screen = ({ route, navigation }) => {
   const ItemCart = ({ item }) => {
     const [Count, setCount] = useState(item.count || 1);
     const price = Count * item.price;
+    const getSize = () => {
+      if (item.size === 1) {
+        return 'S'
+      } else if (item.size === 2) {
+        return 'M'
+      } else if (item.size === 3) {
+        return 'L'
+      }
+    }
+    const updateCartItemCount = async (itemId, newCount) => {
+      if (isNaN(newCount) || newCount < 1) {
+        console.error('Invalid count value:', newCount);
+        return;
+      }
+      try {
+        const itemRef = ref(DATABASE, `Cart/${item.cardId}`);
+        await update(itemRef, {
+          count: newCount,
+        });
+        setCart((prevState) =>
+          prevState.map((item) =>
+            item.cardId === itemId ? { ...item, count: newCount } : item
+          )
+        );
+      } catch (error) {
+        console.error('Error updating cart item count:', error);
+      }
+    };
     return (
       <View style={{ marginTop: 20, backgroundColor: '#262B33', width: '100%', height: 154, borderRadius: 20, padding: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
         <Image source={{ uri: item.image_pd }} style={{ backgroundColor: 'blue', width: 130, height: 130, borderRadius: 20, resizeMode: 'cover' }} />
@@ -107,15 +135,15 @@ const Cart_Screen = ({ route, navigation }) => {
             </View>
             <View style={{ alignItems: 'center', width: 30 }}>
               <TouchableOpacity style={{ width: '100%' }}
-                onPress={() => {
-
-                }}>
+                onPress={() => { }}>
               </TouchableOpacity>
             </View>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', height: 40 }}>
-            <View style={{ height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-              <TextInput style={{ width: 72, height: 35, backgroundColor: '#0C0F14', borderRadius: 10, textAlign: 'center', color: '#fff', fontSize: 16, fontWeight: '500' }} value='M' />
+            <View style={{ width: 72, height: 35, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0C0F14', borderRadius: 10, marginTop: 5 }}>
+              <Text style={{ textAlign: 'center', color: '#fff', fontSize: 16, fontWeight: '500' }}>
+                {getSize()}
+              </Text>
             </View>
             <View style={{ flexDirection: 'row', marginTop: 10 }}>
               <Text style={{ color: '#D17842', fontWeight: 600, fontSize: 20 }}>$</Text>
@@ -125,9 +153,11 @@ const Cart_Screen = ({ route, navigation }) => {
           <View style={{ justifyContent: 'space-between', flexDirection: 'row', marginTop: 10 }}>
             <TouchableOpacity style={{ backgroundColor: '#D17842', width: 30, height: 30, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }}
               onPress={() => {
-                setCount(Count - 1);
-                
-                if (Count < 1) {
+                if (Count > 1) {
+                  setCount(Count - 1);
+                  updateCartItemCount(item.cardId, Count - 1);
+                  getData();
+                } else {
                   handleDeleteItem(item);
                 }
               }}>
@@ -136,11 +166,12 @@ const Cart_Screen = ({ route, navigation }) => {
             <View style={{ width: 55, height: 30, backgroundColor: '#0C0F14', borderRadius: 10, textAlign: 'center', borderWidth: 1, borderColor: '#D17842', justifyContent: 'center', alignItems: 'center' }}>
               <Text style={{ color: '#fff', fontSize: 16, fontWeight: '500' }}>{String(Count)}</Text>
             </View>
-            <TouchableOpacity style={{ backgroundColor: '#D17842', width: 30, height: 30, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }} 
+            <TouchableOpacity style={{ backgroundColor: '#D17842', width: 30, height: 30, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }}
               onPress={() => {
-                setCount(Count + 1)
-                
-                }} >
+                setCount(Count + 1);
+                updateCartItemCount(item.cardId, Count + 1); 
+                getData()
+              }} >
               <IconEntypo name='plus' size={22} color={'#fff'} />
             </TouchableOpacity>
           </View>
@@ -191,7 +222,7 @@ const Cart_Screen = ({ route, navigation }) => {
           <Text style={{ color: '#AEAEAE', fontWeight: 500, fontSize: 14 }}>Total Price</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: 65 }}>
             <Text style={{ color: '#D17842', fontWeight: 600, fontSize: 20 }}>$</Text>
-            <Text style={{ color: '#fff', fontWeight: 600, fontSize: 20 }}> {totalPrice}  </Text>
+            <Text style={{ color: '#fff', fontWeight: 600, fontSize: 20 }}> {totalPrice.toFixed(2)}  </Text>
           </View>
         </View>
         <View style={{ height: '100%', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
